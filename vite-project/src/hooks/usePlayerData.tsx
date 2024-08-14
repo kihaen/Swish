@@ -1,6 +1,6 @@
 import props from '../../props.json';
 import alternates from '../../alternates.json';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useId } from 'react';
 
 export enum statType {
     'assists',
@@ -44,6 +44,7 @@ export const usePlayerData = ()=>{
     const [playerProp, setPlayerProp] = useState<Record<string, PlayerProp[]>>({});
     const [alternatesRecord, setAlternatesRecord] = useState<Record<string, Record<statType, Alternates[]>>>({});
     const [formattedPlayerData, setFormattedPlayerData] = useState<PlayerData[]>([])
+    const [playerFilter, setPlayerFilter] = useState<string[]>([])
 
     useMemo(()=>{
         const playerRecords = props.reduce((acc, player)=>{
@@ -56,8 +57,9 @@ export const usePlayerData = ()=>{
             return acc
         }, {} as Record<string, PlayerProp[]>)
         setPlayerProp(playerRecords)
-        console.log(playerRecords)
+        setPlayerFilter(Object.keys(playerRecords))
     }, [props])
+
 
     useMemo(()=>{
         const alternatesRecord = alternates.sort((a, b) => a.line - b.line).reduce((acc, alternates)=>{
@@ -75,8 +77,8 @@ export const usePlayerData = ()=>{
 
     useMemo(()=>{
         
-        const playerFormmated = Object.values(playerProp).flatMap((players)=> (
-            players.map((player)=> {
+        const playerFormmated = Object.values(playerProp).flatMap((players, id)=> (
+            players.map((player, secondId)=> {
                 const alternatePlayer = alternatesRecord[player.playerName]
                 const alternatePlayerStat = alternatePlayer[player.statType as unknown as statType]
                 const alternateOptimal = alternatePlayerStat?.find((p)=> p.line === player.line)
@@ -86,7 +88,8 @@ export const usePlayerData = ()=>{
                     ...player, 
                     low : alternatePlayerStat?.[0].line, 
                     high : alternatePlayerStat?.[alternatePlayerStat.length-1].line,
-                    suspended : (!!player.marketSuspended || !alternateOptimal || probabilityCheck) ? 'Suspended' : 'Open'
+                    suspended : (!!player.marketSuspended || !alternateOptimal || probabilityCheck) ? 'Suspended' : 'Open',
+                    key : `${id}-${secondId}`
                 })}
             ))
         )
@@ -95,7 +98,20 @@ export const usePlayerData = ()=>{
  
     }, [playerProp, alternatesRecord])
 
+    const updatePlayer = (player : PlayerData)=>{
+        setPlayerProp(prev => {
+           const playerRecord =  prev[player.playerName]
+           const index = playerRecord.findIndex((market)=> market.statType === player.statType)
+           return {
+            ...prev,
+            [player.playerName] : [...playerRecord.slice(0, index), player, ...playerRecord.slice(index +1, playerRecord.length)]
+           } 
+        })
+    }
+
     return{
-        formattedPlayerData
+        playerFilter,
+        formattedPlayerData,
+        updatePlayer
     }
 }

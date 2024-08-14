@@ -6,11 +6,11 @@ import { usePlayerData } from './hooks/usePlayerData';
 function App() {
 
 
-  const { formattedPlayerData } = usePlayerData()
+  const { formattedPlayerData, playerFilter, updatePlayer } = usePlayerData()
 
   return (
     <>
-    <MarketTable data={formattedPlayerData}/>
+    <MarketTable data={formattedPlayerData} playerFilter={playerFilter} updatePlayer={updatePlayer}/>
     </>
   )
 }
