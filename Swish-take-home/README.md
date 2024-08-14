@@ -1,6 +1,4 @@
-# React + TypeScript + Vite
-
-Submission for Swish Take Home Project
+# Submission for Swish Take Home Project
 
 ## How to use
 
